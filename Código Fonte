@@ -1,0 +1,104 @@
+#include <Arduino.h>
+#define MQ9PIN 34
+#define ESCALA_ALERTA 8 // Valor de limiar para detecção de gás (ajuste conforme necessário)
+#define BUZZER_PIN 32
+unsigned long tempoAnterior = 0; // Armazena o último momento em que o LED foi atualizado
+unsigned long PERIODO = 10000;
+unsigned long tempoAtual = 0;
+int ALARME_ACIONADO = 0;
+int sensorValue;
+float voltage;
+void setup() {
+  Serial.begin(115200);
+  pinMode(MQ9PIN, INPUT);
+  pinMode(BUZZER_PIN, OUTPUT);
+}
+
+void loop() {
+
+  sensorValue = analogRead(MQ9PIN);
+  voltage = sensorValue * (5.0 / 1023.0); // Converter valor analógico para tensão
+
+  Serial.print("Valor lido: ");
+  Serial.println(sensorValue);
+  Serial.print("Tensao: ");
+  Serial.println(voltage);
+
+  while (voltage > ESCALA_ALERTA)
+  {
+
+    sensorValue = analogRead(MQ9PIN);
+    voltage = sensorValue * (5.0 / 1023.0); // Converter valor analógico para tensão
+    //    Serial.print("Valor lido: ");
+    //    Serial.println(sensorValue);
+    //    Serial.print("Tensao: ");
+    //    Serial.println(voltage);
+    Serial.println("Gas ativo! Presenca de gas detectada.");
+    tempoAtual = millis();
+    //    delay(1000);
+    //    for (c = 1; c <= 5; c++)
+    //    {
+    //      Serial.print("Tensao: ");
+    //      Serial.println(voltage);
+    //      Serial.println("contagem:");
+    //      Serial.println(c);
+    //    delay (2000);
+    //   if (c == 5)
+    //    {
+    //      Serial.println("5 leituras");
+    //      buzzer(voltage,ESCALA_ALERTA);
+    //    }
+    //
+    //  }
+    //
+    //    else {
+    //    Serial.println("Nenhum gas detectado.");
+    //
+    //
+    //  delay(1000);
+
+
+
+    if (tempoAtual - tempoAnterior >= PERIODO)
+    {
+      tempoAnterior = tempoAtual;
+      Serial.println("Entrei buzzer");
+      ALARME_ACIONADO = 1;
+      buzzer();
+
+    }
+    else
+    {
+      Serial.println("Contando");
+    }
+
+
+  }
+  //  ALARME_ACIONADO =0;
+  //  digitalWrite(BUZZER_PIN,LOW);
+  //  Serial.println("Nenhum gas detectado.");
+  //  delay(1000);
+}
+
+
+void buzzer()
+{
+  while (ALARME_ACIONADO == 1)
+  {
+    tone(BUZZER_PIN, 3000, 1);
+    sensorValue = analogRead(MQ9PIN);
+    voltage = sensorValue * (5.0 / 1023.0); // Converter valor analógico para tensão
+
+
+
+    if (voltage < ESCALA_ALERTA)
+    {
+      // Desativar o buzzer
+      digitalWrite(BUZZER_PIN, LOW);
+      Serial.println("BUZZER DESLIGADO");
+      ALARME_ACIONADO = 0;
+      break;
+    }
+
+  }
+}
